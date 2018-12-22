@@ -1,0 +1,118 @@
+---
+title: "Statistical Inference Project Part 2: Basic Inferential Data Analysis Instructions"
+author: Susmitha Saripalli
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Description
+Analyze the ToothGrowth data in the R datasets package.
+
+## Loading Libraries and data
+
+```{r libraries}
+library(data.table)
+library(ggplot2)
+library(datasets)
+```
+
+## 1. Load the ToothGrowth data and perform some basic exploratory data analyses
+
+```{r simulation}
+data("ToothGrowth")
+
+head(ToothGrowth)
+summary(ToothGrowth)
+unique(ToothGrowth$supp)
+unique(ToothGrowth$dose)
+# looking at doses for each supplememnt type
+table(ToothGrowth$supp, ToothGrowth$dose) 
+
+```
+
+```{r plot1}
+# By Supplement Type
+ToothGrowth$dose = as.factor(ToothGrowth$dose)
+g <- ggplot(ToothGrowth, aes(x=dose, y= len))
+g + geom_boxplot(aes(fill=dose)) +
+  facet_grid(.~supp) + 
+  scale_fill_brewer(palette="Accent") +
+  ggtitle("Tooth Lengths vs. Dose amounts, supplement type")
+s <-ggplot(ToothGrowth,  aes(x=dose, y= len, color = dose)) 
+s + geom_point() +
+  facet_grid(.~supp) +
+  scale_color_brewer(palette="Accent") +
+  ggtitle("Tooth Lengths vs. Dose amounts, supplement type")
+
+
+```
+
+
+```{r plot2}
+# By Dosage
+g <- ggplot(ToothGrowth, aes(x=supp, y= len))
+g + geom_boxplot(aes(fill=dose)) +
+  facet_grid(.~dose) + 
+  scale_fill_brewer(palette="Accent") +
+  ggtitle("Tooth Lengths vs. Supplement type, (per dosage)")
+s <-ggplot(ToothGrowth,  aes(x=supp, y= len, color = supp)) 
+s + geom_point() +
+  facet_grid(.~dose) +
+  scale_color_brewer(palette="Accent") +
+  ggtitle("Tooth Lengths vs. Dose amounts, supplement type")
+
+```
+
+## 2. Provide a basic summary of the data.
+The general trend is that tooth length seems proportional to dosage, meaning longer teeth require a higher dosage, which is to be expected. The data seems collected in a way that gives us 10 of each supplement type per dose amount so we can't make any conclusions about the usage of one supplement type over another. Alternatively, there doesn't seem to be a visual correlation between supplement type and tooth length.
+
+
+## 3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. 
+
+# t-test for group differences due to different supplement type, 
+# (assume unequal variances between the two groups)
+
+```{r }
+t.test(len ~ supp, data = ToothGrowth)
+```
+
+The p-value is 0.06063 and zero is in the confidence interval. This means we can't reject the null hypothesis: "different supplement types have no effect on tooth length"
+
+# t-test for group differences due to different dosages
+# splitting the doses into subsets of different pairs of dosages
+```{r }
+doses_0.5_1.0 <- subset (ToothGrowth, dose %in% c(0.5, 1.0)) 
+doses_0.5_2.0 <- subset (ToothGrowth, dose %in% c(0.5, 2.0)) 
+doses_1.0_2.0 <- subset (ToothGrowth, dose %in% c(1.0, 2.0)) 
+```
+
+dose levels (0.5, 1.0), assuming unequal variances between the two groups
+```{r }
+t.test(len ~ dose, data = doses_0.5_1.0)
+```
+
+dose levels (0.5, 2.0), assuming unequal variances between the two groups
+```{r }
+t.test(len ~ dose, data = doses_0.5_2.0)
+```
+
+dose levels (1.0, 2.0), assuming unequal variances between the two groups
+```{r }
+t.test(len ~ dose, data = doses_1.0_2.0)
+```
+
+The p-value is less than 0.05 for all the dosage pairs, and the confidence interval does not contain zero. The mean tooth length of the higher dosage is always higher than the mean length of the lower dosage. This means we can reject the null hypothesis and conclude that increasing the dosage leads to an increase in tooth length. 
+
+## Assumptions
+To do t tests, we assumed unequal variances between the groups we were testing. In the case of supplement type, the groups were the two supplements (VC or OJ). In the case of dose levels, the groups were the three different combinations of dosage level pais (0.5 & 1.0, 0.5 & 2.0, 1.0 & 2.0).
+
+## Conclusions
+t tests confirmed that supplement type has no effect on tooth but inreasing the dosage level leads to an increased tooth growth.
+
+
+
+
+
+
